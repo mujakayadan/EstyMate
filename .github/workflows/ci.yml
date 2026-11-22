@@ -26,7 +26,9 @@ jobs:
       - run: npm run lint
       - run: npm run build
       - name: Start socket server
-        run: npx tsx server/socket.ts &
+        env:
+          HOST: 127.0.0.1
+        run: npx --no-install tsx server/socket.ts &
       - name: Wait for socket port
         run: |
           set -euo pipefail
