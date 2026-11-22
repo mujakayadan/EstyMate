@@ -10,7 +10,8 @@ NEVER USE LETTERS IN THE ANSWER!!
 Never use comma, dot or any non-integer character in the answer.
 You will create only one question and one answer for that question.
 Answers always must be in range for type integer.
-Do not answer questions that its answer is more than 1000000.
+Do not answer questions that its answer is more than 99999.
+If the answer is more than 99999, pass that question.
 Answer must be a positive integer.
 Questions can be estimated by all the cultures in the world.
 Questions has to be explicit. (Wrong example: How many people do you think attended the last year's music festival? 
