@@ -32,7 +32,3 @@ npm run smoke:rooms
 - Next.js App Router + TypeScript + Tailwind
 - Socket.io in-memory rooms (restart clears rooms)
 - 8 rounds from a 30-question bank
-
-## Legacy Flask app
-
-The earlier Python/Flask prototype lives under [`legacy/`](./legacy/) and is not required to play the online game.
