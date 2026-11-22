@@ -74,13 +74,29 @@ function emitAck(
   });
 }
 
+function connectOrFail(socket: GameSocket, label: string, timeoutMs = 5000) {
+  return new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error(`${label} did not connect to ${URL} within ${timeoutMs}ms`));
+    }, timeoutMs);
+    socket.on("connect", () => {
+      clearTimeout(timer);
+      resolve();
+    });
+    socket.on("connect_error", (error) => {
+      clearTimeout(timer);
+      reject(new Error(`${label} connect_error: ${error.message}`));
+    });
+  });
+}
+
 async function main() {
   const host = io(URL, { transports: ["websocket"] }) as GameSocket;
   const guest = io(URL, { transports: ["websocket"] }) as GameSocket;
 
   await Promise.all([
-    new Promise<void>((resolve) => host.on("connect", () => resolve())),
-    new Promise<void>((resolve) => guest.on("connect", () => resolve())),
+    connectOrFail(host, "host"),
+    connectOrFail(guest, "guest"),
   ]);
 
   const hostLobby = waitForPlayerCount(host, 1);
