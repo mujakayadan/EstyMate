@@ -1,17 +1,16 @@
 from openai import OpenAI
 import psycopg2
 from psycopg2 import sql
-from api_key import api_key
+from api_key import openai_api_key
 from prompt import prompt
 import logging
 import re
-
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Set up your OpenAI API key
-client = OpenAI(api_key=api_key)
+client = OpenAI(api_key=openai_api_key)
 
 # Database connection details
 DB_NAME = "esty_mate"
@@ -22,20 +21,26 @@ DB_PORT = "5432"
 
 
 # Function to generate estimation questions
-def generate_estimation_question():
-    response = client.chat.completions.create(
+def generate_estimation_questions_batch(batch_size):
+    messages = [
+        {"role": "system", "content": "You are a model for creating estimation questions."},
+        {"role": "user", "content": prompt}
+    ]
+
+    responses = client.chat.completions.create(
         model="gpt-4o",
-        messages=[
-            {"role": "system", "content": "You are a model for creating estimation questions."},
-            {"role": "user", "content": prompt}
-        ],
-        max_tokens=100
+        messages=messages,
+        max_tokens=100,
+        n=batch_size  # Generate a batch of questions
     )
-    text = response.choices[0].message.content.strip()
-    print(text)
-    question_text, correct_answer = parse_question_answer(text)
-    print(question_text, correct_answer)
-    return question_text, correct_answer
+
+    questions = []
+    for response in responses.choices:
+        text = response.message.content.strip()
+        question_text, correct_answer = parse_question_answer(text)
+        if question_text and correct_answer:
+            questions.append((question_text, correct_answer))
+    return questions
 
 
 def parse_question_answer(output):
@@ -50,24 +55,16 @@ def parse_question_answer(output):
         correct_answer = match.group(2)
 
         if correct_answer:  # Ensure there is an answer
+            if len(correct_answer) > 5:
+                return None, None
             correct_answer = correct_answer.replace(',', '')
             return question_part, correct_answer
 
     return None, None
 
 
-# Example usage
-output = "Question: [How many hours in a year?] Answer: [8760]"
-question, answer = parse_question_answer(output)
-
-if question and answer:
-    print(f"Question: {question}, Answer: {answer}")
-else:
-    print("No valid question and answer found.")
-
-
 # Function to populate questions in the database
-def populate_questions(n):
+def populate_questions(total_questions, batch_size):
     try:
         # Attempt to establish a connection
         logging.debug("Connecting to the database...")
@@ -88,17 +85,19 @@ def populate_questions(n):
 
         categories = ["science", "math", "general_knowledge", "technology"]  # Example categories
 
-        for _ in range(n):
-            question_text, correct_answer = generate_estimation_question()
-            if question_text and correct_answer is not None:
-                category = categories[_ % len(categories)]  # Rotate through categories
+        for i in range(0, total_questions, batch_size):
+            batch_questions = generate_estimation_questions_batch(batch_size)
+            if not batch_questions:
+                logging.warning("No valid questions generated in this batch.")
+                continue
+
+            for question_text, correct_answer in batch_questions:
+                category = categories[i % len(categories)]  # Rotate through categories
                 cur.execute(insert_query, (question_text, correct_answer, category))
                 logging.debug("Inserted question: %s", question_text)
-            else:
-                logging.warning("Generated question is invalid: %s, %s", question_text, correct_answer)
 
-        conn.commit()
-        logging.debug("Transaction committed.")
+            conn.commit()
+            logging.debug("Batch transaction committed.")
     except Exception as e:
         logging.error("An error occurred while inserting data: %s", e)
     finally:
@@ -107,5 +106,5 @@ def populate_questions(n):
         logging.debug("Database connection closed.")
 
 
-# Generate and populate 2000 questions
-populate_questions(20)
+# Generate and populate 2000 questions with a batch size of 50
+populate_questions(2000, 50)
