@@ -1,10 +1,5 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 const eslintConfig = [
   ...nextVitals,
@@ -21,5 +16,3 @@ const eslintConfig = [
 ];
 
 export default eslintConfig;
-
-void __dirname;

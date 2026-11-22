@@ -6,6 +6,8 @@ Host creates a room, shares a 4-character code or `/?room=CODE` link, everyone e
 
 ## Run locally (Windows / macOS / Linux)
 
+Node 24 (see `.node-version`).
+
 ```bash
 npm install
 npm run dev
@@ -21,10 +23,16 @@ Optional env:
 - `HOST` (default `0.0.0.0`)
 - `NEXT_PUBLIC_SOCKET_URL` (defaults to `hostname:43128`)
 
-Smoke two sockets without a browser:
+Smoke two sockets without a browser (socket server must be listening, e.g. via `npm run dev`):
 
 ```bash
 npm run smoke:rooms
+```
+
+Browser UI smoke (app must be running, e.g. `npm run dev`):
+
+```bash
+npm run smoke:browsers
 ```
 
 ## Stack
@@ -32,3 +40,9 @@ npm run smoke:rooms
 - Next.js App Router + TypeScript + Tailwind
 - Socket.io in-memory rooms (restart clears rooms)
 - 8 rounds from a 30-question bank
+
+## Contributing
+
+- Feature branches: `<github-user>/<type>/<kebab-name>` targeting `dev`. Titles use Conventional Commits.
+- `main` accepts promotions from `dev` (or `qa`/`staging`) and Dependabot / release-please PRs.
+- CI runs `lint`, `build`, and `smoke:rooms`.

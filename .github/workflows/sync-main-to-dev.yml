@@ -1,5 +1,5 @@
-# Keeps dev a superset of main: after releases or hotfixes land on main, open a main -> dev PR.
-# CI on PRs opened with GITHUB_TOKEN waits for approval; a GITOPS_TOKEN secret makes it run directly.
+# When origin/main is not an ancestor of origin/dev, open a main -> dev PR.
+# PRs opened with GITHUB_TOKEN wait for approval; GITOPS_TOKEN lets CI run directly.
 name: sync-main-to-dev
 
 on:
@@ -35,4 +35,4 @@ jobs:
             echo "sync pull request already open"; exit 0
           fi
           gh pr create --base dev --head main --title "chore: sync main into dev" \
-            --body "Brings release and hotfix commits from main back into dev. Merge with a merge commit, not squash."
+            --body "Syncs commits on main that are not yet on dev. Merge with a merge commit, not squash."
